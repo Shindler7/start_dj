@@ -1,0 +1,8 @@
+[server]
+port = 8080
+reload = true
+
+[tuna]
+project = "brainstorm"
+config = ""
+api_key = ""
