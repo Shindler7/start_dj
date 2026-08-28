@@ -1,3 +1,6 @@
+[environment]
+runserver="manage.py runserver"
+
 [server]
 port = 8080
 reload = true

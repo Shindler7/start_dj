@@ -1,9 +1,17 @@
-# Dj — консольная утилита для запуска Django-приложений
+# Dj — a console utility for running Django applications
 
-Однажды возникает вопрос: почему бы не использовать `uv` и `tuna` для запуска
-Django-приложений на Python? Никаких проблем, но далее возникает множество
-параметров в командной строке, которые необходимо вводить.
+At some point, you might ask yourself: why not use uv and tuna to run Django
+applications in Python? No problem there. But soon enough, you find yourself juggling a
+growing number of command-line parameters that all need to be typed in manually.
 
-Можно сократить через скрипт `.sh`, но это сложный незнакомый синтаксис, худшая
-читаемость и проверяемость. Это приложение решает многие проблемы запуска, и
-забирает на себя черновую работу с командной строкой.
+You could wrap it all in a .sh script, but that means dealing with unfamiliar,
+error-prone syntax, poor readability, and little room for validation. This application
+takes care of the heavy lifting, handling all the command-line boilerplate so you don't
+have to.
+
+## Built with Rust
+
+This little tool is written in Rust — because why not bring some speed and reliability
+to the party? It's a small personal project, but it's sitting right there on GitHub,
+open for anyone to use, tweak, or just poke around. If it saves you a few keystrokes
+too, feel free to grab it and make it your own.
