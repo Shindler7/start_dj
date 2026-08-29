@@ -1,11 +1,59 @@
+# ============================================================
+# Dj configuration — everything you need to run your Django app
+# ============================================================
+
+# ----------------------------------------------------------------------
+# Environment variables — where to load them from
+# ----------------------------------------------------------------------
 [environment]
-runserver="manage.py runserver"
+# Path to your environment file (supports `${VAR}` placeholders)
+env = ".env.example"
 
-[server]
+# Source strategy:
+# - "dotenv" — load only from the .env file
+# - "env"    — use system environment variables only
+# - "mixed"  — combine both (.env takes precedence, system overrides)
+source = "mixed"
+
+# ----------------------------------------------------------------------
+# Django development server settings
+# ----------------------------------------------------------------------
+[django]
+# Custom command to run the server (default: "runserver")
+# You can use any Django management command here
+runserver = ["python", "-m", "uvicorn", "--reload", "rustogrped.asgi:application"]
+
+# Port to bind the server to (default: 8000)
 port = 8080
-reload = true
 
+# Server flags — toggle any of these as needed
+ipv6 = false   # Use IPv6 instead of IPv4
+nothreading = false   # Disable multi-threading
+noreload = false   # Disable auto-reloader
+nostatic = false   # Disable static file serving
+insecure = false   # Allow HTTP in production environments
+skip-checks = false   # Skip Django's system checks
+
+# ----------------------------------------------------------------------
+# Tuna cloud secrets — optional, only if you need cloud secrets
+# ----------------------------------------------------------------------
 [tuna]
-project = "brainstorm"
-config = ""
-api_key = ""
+# Tuna project and environment names
+project = "funny"
+config = "dev"
+
+# API key — supports `${VAR}` expansion from your .env file
+# Never hardcode secrets! Use environment variables.
+api_key = "${TUNA_API_KEY}"
+
+# ----------------------------------------------------------------------
+# Feature flags — opt-in to experimental or optional functionality
+# ----------------------------------------------------------------------
+[features]
+# Enable Tuna cloud secrets integration.
+# If set to `true`, the `[tuna]` block above is required.
+tuna = true
+
+# Use `uv` instead of the standard Python package manager.
+# Faster, modern, and shiny — but optional.
+uv = true

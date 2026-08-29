@@ -1,20 +1,19 @@
-//! Разбор параметров командной строки.
+//! Command-line argument parsing.
+//!
+//! Defines the CLI structure for launching Brainstorm in development mode
+//! with optional Tuna cloud secrets integration.
 
 use argh::FromArgs;
 
-/// Запуск Brainstorm в режиме разработки с облачными секретами Tuna.
+/// Launch App in development mode with Tuna cloud secrets.
 #[derive(Debug, FromArgs)]
 pub(crate) struct DjUp {
-    /// отключить использование `TUNA` при запуске.
-    #[argh(switch)]
-    pub(crate) no_tuna: bool,
-
-    /// режим запуска.
+    /// subcommand to execute (defaults to `runserver`).
     #[argh(subcommand)]
     pub(crate) command: Option<Command>,
 }
 
-/// Подкоманды запуска.
+/// Available subcommands for the Dj utility.
 #[derive(Debug, FromArgs)]
 #[argh(subcommand)]
 pub(crate) enum Command {
@@ -24,14 +23,14 @@ pub(crate) enum Command {
 
 #[derive(Debug, FromArgs)]
 #[argh(subcommand, name = "runserver")]
-/// Запуск ASGI сервера (uvicorn).
+/// Start the Django development server.
 pub(crate) struct Runserver {}
 
 #[derive(Debug, FromArgs)]
 #[argh(subcommand, name = "manage")]
-/// Запуск команд manage.py.
+/// Run arbitrary `manage.py` commands.
 pub(crate) struct Manage {
-    /// команда Django и её флаги.
+    /// django command and its flags (everything that follows `manage`).
     #[argh(positional, greedy)]
     pub(crate) django_args: Vec<String>,
 }
@@ -42,8 +41,11 @@ impl Default for Command {
     }
 }
 
+/// Parse command-line arguments and return the configuration.
+///
+/// If no subcommand is provided, `runserver` is used as the default.
 pub(crate) fn parse_args() -> DjUp {
     let mut args: DjUp = argh::from_env();
-    args.command.get_or_insert_with(Command::default); // runserver по умолчанию
+    args.command.get_or_insert_with(Command::default);
     args
 }
