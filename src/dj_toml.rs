@@ -155,7 +155,7 @@ pub(crate) struct Params {
 #[derive(Debug, Deserialize)]
 pub(crate) struct Django {
     /// Core Django launch configuration.
-    #[serde(rename = "runserver")]
+    #[serde(rename = "runserver", default)]
     run_server: DjangoCommands,
 
     /// Port to bind the development server to.
