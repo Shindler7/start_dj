@@ -30,10 +30,12 @@ mod cli;
 mod constance;
 mod dj_toml;
 mod types;
+mod helpers;
 
 use crate::{
     dj_toml::{Params, read_params},
     types::DjangoCommands,
+    constance::MANAGE_PY,
 };
 use anyhow::{Result, bail};
 use cli::{Command as ArgsCommand, DjUp, parse_args};
@@ -42,6 +44,9 @@ use std::process::{Command, ExitCode};
 /// Program entry point — parses CLI args, loads config, and dispatches
 /// to the appropriate handler.
 fn main() -> Result<ExitCode> {
+    helpers::detect_shell();
+    return Ok(ExitCode::SUCCESS);
+    
     let dj_up: DjUp = parse_args();
     let params = read_params()?;
 
@@ -108,6 +113,7 @@ fn run_server(params: &Params) -> Result<ExitCode> {
     let mut django_commands = params.django.runserver();
 
     if django_commands.is_default() {
+        django_commands.push(MANAGE_PY.to_string());
         django_commands.extend(params.django.runserver_args().into_iter());
         django_commands.push(params.django.port())
     };
@@ -125,7 +131,7 @@ fn manage(params: &Params, django_args: &DjangoCommands) -> Result<ExitCode> {
         django_commands.push("python".to_string());
     }
 
-    django_commands.push("manage.py".to_string());
+    django_commands.push(MANAGE_PY.to_string());
     django_commands.extend(django_args.iter().cloned());
 
     django_commands = update_commands_by_features(django_commands, &params)?;

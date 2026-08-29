@@ -28,7 +28,6 @@ impl From<Vec<&str>> for DjangoCommands {
 impl From<DjangoCommands> for Command {
     fn from(dj_commands: DjangoCommands) -> Self {
         let mut iter = dj_commands.0.into_iter();
-
         let program = iter.next().unwrap_or_default();
 
         let mut cmd = Command::new(program);

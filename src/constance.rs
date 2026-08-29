@@ -20,3 +20,6 @@ pub(crate) fn toml_path() -> Result<PathBuf> {
 fn current_dir() -> Result<PathBuf> {
     Ok(env::current_dir().context("Could not get current directory")?)
 }
+
+/// The default Django management script name.
+pub(crate) const MANAGE_PY: &str = "manage.py";
