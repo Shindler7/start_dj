@@ -1,5 +1,6 @@
 //! Core data structures used throughout the application.
 
+use anyhow::{Context, Result as AnyhowResult};
 use serde::Deserialize;
 use std::{
     ops::{Deref, DerefMut},
@@ -25,15 +26,16 @@ impl From<Vec<&str>> for DjangoCommands {
     }
 }
 
-impl From<DjangoCommands> for Command {
-    fn from(dj_commands: DjangoCommands) -> Self {
-        let mut iter = dj_commands.0.into_iter();
+impl TryFrom<DjangoCommands> for Command {
+    type Error = anyhow::Error;
 
-        let program = iter.next().unwrap_or_default();
+    fn try_from(dj_commands: DjangoCommands) -> AnyhowResult<Self> {
+        let mut parts = dj_commands.0.into_iter();
+        let program = parts.next().context("Django command is empty")?;
 
-        let mut cmd = Command::new(program);
-        cmd.args(iter);
-        cmd
+        let mut command = Command::new(&program);
+        command.args(parts);
+        Ok(command)
     }
 }
 

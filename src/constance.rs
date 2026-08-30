@@ -20,3 +20,14 @@ pub(crate) fn toml_path() -> Result<PathBuf> {
 fn current_dir() -> Result<PathBuf> {
     Ok(env::current_dir().context("Could not get current directory")?)
 }
+
+/// The default Django management script name.
+pub(crate) const MANAGE_PY: &str = "manage.py";
+
+/// Python executable name — platform-specific.
+/// On Windows, use `py` (Python launcher). On Unix-like systems, use `python`.
+#[cfg(windows)]
+pub(crate) const PYTHON_BIN: &str = "py";
+
+#[cfg(not(windows))]
+pub(crate) const PYTHON_BIN: &str = "python3";
