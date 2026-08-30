@@ -103,7 +103,7 @@ fn command_execute(mut command: Command) -> ExitCode {
     match command.status() {
         Ok(status) if status.success() => ExitCode::SUCCESS,
         Ok(status) => {
-            eprintln!("Command failed: {}", status_str(status));
+            eprintln!("Command failed: {}", status_display(status));
             ExitCode::FAILURE
         }
         Err(err) => {
@@ -117,7 +117,7 @@ fn command_execute(mut command: Command) -> ExitCode {
 }
 
 /// Formats a process exit status into a human-readable string.
-fn status_str(status: ExitStatus) -> String {
+fn status_display(status: ExitStatus) -> String {
     status
         .code()
         .map(|code| format!("exit code {code}"))
