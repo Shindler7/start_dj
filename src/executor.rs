@@ -69,7 +69,8 @@ pub(super) fn run_server(params: &Params) -> AnyhowResult<ExitCode> {
 
     django_commands = update_commands_by_features(django_commands, &params)?;
 
-    command_execute(Command::try_from(django_commands)?)
+    let exit_code = command_execute(Command::try_from(django_commands)?);
+    Ok(exit_code)
 }
 
 /// Executes a `manage.py` command with the given arguments.
@@ -85,38 +86,40 @@ pub(super) fn manage(params: &Params, django_args: &DjangoCommands) -> AnyhowRes
 
     django_commands = update_commands_by_features(django_commands, &params)?;
 
-    command_execute(Command::try_from(django_commands)?)
+    let exit_code = command_execute(Command::try_from(django_commands)?);
+    Ok(exit_code)
 }
 
 /// Spawns a child process, waits for it to complete, and returns the exit status.
 ///
 /// If the process fails to spawn or errors during execution, it's killed and
 /// a failure code is returned.
-fn command_execute(mut command: Command) -> AnyhowResult<ExitCode> {
-    fn format_status(status: ExitStatus) -> String {
-        status
-            .code()
-            .map(|code| format!("exit code {code}"))
-            .unwrap_or_else(|| "terminated".to_string())
-    }
-
+fn command_execute(mut command: Command) -> ExitCode {
     command
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
 
     match command.status() {
-        Ok(status) if status.success() => Ok(ExitCode::SUCCESS),
+        Ok(status) if status.success() => ExitCode::SUCCESS,
         Ok(status) => {
-            eprintln!("Command failed: {}", format_status(status));
-            Ok(ExitCode::FAILURE)
+            eprintln!("Command failed: {}", status_str(status));
+            ExitCode::FAILURE
         }
         Err(err) => {
             eprintln!(
                 "Failed to run `{}`: {err}",
                 command.get_program().to_string_lossy()
             );
-            Ok(ExitCode::FAILURE)
+            ExitCode::FAILURE
         }
     }
+}
+
+/// Formats a process exit status into a human-readable string.
+fn status_str(status: ExitStatus) -> String {
+    status
+        .code()
+        .map(|code| format!("exit code {code}"))
+        .unwrap_or_else(|| "terminated".to_string())
 }
