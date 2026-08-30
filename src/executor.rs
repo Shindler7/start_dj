@@ -4,11 +4,11 @@
 //! wrappers (Tuna, uv), and executing the resulting process.
 
 use crate::{
-    constance::MANAGE_PY,
+    constance::{MANAGE_PY, PYTHON_BIN},
     parse_toml::{DjangoCommands, Params},
 };
 use anyhow::{Result as AnyhowResult, bail};
-use std::process::{Command, ExitCode};
+use std::process::{Command, ExitCode, ExitStatus, Stdio};
 
 /// Prepends feature-related commands (Tuna, uv) to the Django command list.
 ///
@@ -77,7 +77,7 @@ pub(super) fn manage(params: &Params, django_args: &DjangoCommands) -> AnyhowRes
     let mut django_commands = DjangoCommands::new();
 
     if !params.features.uv {
-        django_commands.push("python".to_string());
+        django_commands.push(PYTHON_BIN.to_string());
     }
 
     django_commands.push(MANAGE_PY.to_string());
@@ -93,23 +93,29 @@ pub(super) fn manage(params: &Params, django_args: &DjangoCommands) -> AnyhowRes
 /// If the process fails to spawn or errors during execution, it's killed and
 /// a failure code is returned.
 fn command_execute(mut command: Command) -> AnyhowResult<ExitCode> {
+    fn format_status(status: ExitStatus) -> String {
+        status
+            .code()
+            .map(|code| format!("exit code {code}"))
+            .unwrap_or_else(|| "terminated".to_string())
+    }
+
+    command
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
+
     match command.status() {
+        Ok(status) if status.success() => Ok(ExitCode::SUCCESS),
         Ok(status) => {
-            if status.success() {
-                Ok(ExitCode::SUCCESS)
-            } else {
-                eprintln!(
-                    "Command exited with non-zero status: {}",
-                    status
-                        .code()
-                        .map(|c| c.to_string())
-                        .unwrap_or_else(|| "terminated by signal".to_string())
-                );
-                Ok(ExitCode::FAILURE)
-            }
+            eprintln!("Command failed: {}", format_status(status));
+            Ok(ExitCode::FAILURE)
         }
         Err(err) => {
-            eprintln!("Failed to start command: {err}");
+            eprintln!(
+                "Failed to run `{}`: {err}",
+                command.get_program().to_string_lossy()
+            );
             Ok(ExitCode::FAILURE)
         }
     }

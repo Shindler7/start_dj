@@ -23,3 +23,11 @@ fn current_dir() -> Result<PathBuf> {
 
 /// The default Django management script name.
 pub(crate) const MANAGE_PY: &str = "manage.py";
+
+/// Python executable name — platform-specific.
+/// On Windows, use `py` (Python launcher). On Unix-like systems, use `python`.
+#[cfg(windows)]
+pub(crate) const PYTHON_BIN: &str = "py";
+
+#[cfg(not(windows))]
+pub(crate) const PYTHON_BIN: &str = "python3";
