@@ -45,6 +45,15 @@ impl Default for DjangoCommands {
     }
 }
 
+impl IntoIterator for DjangoCommands {
+    type Item = String;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 impl Deref for DjangoCommands {
     type Target = Vec<String>;
 

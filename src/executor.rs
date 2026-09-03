@@ -18,9 +18,13 @@ use std::process::{Command, ExitCode, ExitStatus, Stdio};
 ///
 /// Feature commands are always prepended before the actual Django command.
 fn update_commands_by_features(
-    django_commands: &DjangoCommands,
+    django_commands: DjangoCommands,
     params: &Params,
 ) -> AnyhowResult<DjangoCommands> {
+    if !params.features.tuna && !params.features.uv {
+        return Ok(django_commands);
+    }
+
     let mut features = DjangoCommands::new();
 
     if params.features.tuna {
@@ -38,11 +42,7 @@ fn update_commands_by_features(
         features.extend(uv_args());
     }
 
-    if features.is_empty() {
-        return Ok(DjangoCommands::new());
-    }
-
-    features.extend(django_commands.iter().cloned());
+    features.extend(django_commands);
 
     Ok(features)
 }
@@ -60,7 +60,7 @@ pub(super) fn run_server(params: &Params) -> AnyhowResult<ExitCode> {
         django_commands.push(params.django.port.to_string());
     };
 
-    django_commands = update_commands_by_features(&django_commands, &params)?;
+    django_commands = update_commands_by_features(django_commands, params)?;
 
     let exit_code = command_execute(Command::try_from(django_commands)?);
     Ok(exit_code)
@@ -77,7 +77,7 @@ pub(super) fn manage(params: &Params, django_args: &DjangoCommands) -> AnyhowRes
     django_commands.push(MANAGE_PY.to_string());
     django_commands.extend(django_args.iter().cloned());
 
-    django_commands = update_commands_by_features(&django_commands, &params)?;
+    django_commands = update_commands_by_features(django_commands, params)?;
 
     let exit_code = command_execute(Command::try_from(django_commands)?);
     Ok(exit_code)
