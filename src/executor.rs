@@ -4,6 +4,7 @@
 //! wrappers (Tuna, uv), and executing the resulting process.
 
 use crate::{
+    commands::{tuna_args, uv_args},
     constance::{MANAGE_PY, PYTHON_BIN},
     parse_toml::{DjangoCommands, Params},
 };
@@ -17,25 +18,14 @@ use std::process::{Command, ExitCode, ExitStatus, Stdio};
 ///
 /// Feature commands are always prepended before the actual Django command.
 fn update_commands_by_features(
-    django_commands: DjangoCommands,
+    django_commands: &DjangoCommands,
     params: &Params,
 ) -> AnyhowResult<DjangoCommands> {
     let mut features = DjangoCommands::new();
 
     if params.features.tuna {
         match &params.tuna {
-            Some(tuna_params) => features.extend(vec![
-                "tuna".to_string(),
-                "secrets".to_string(),
-                "run".to_string(),
-                "--project".to_string(),
-                tuna_params.project.to_string(),
-                "--config".to_string(),
-                tuna_params.config.to_string(),
-                "--api-key".to_string(),
-                tuna_params.api_key().to_string(),
-                "--".to_string(),
-            ]),
+            Some(tuna_params) => features.extend(tuna_args(tuna_params)),
             None => bail!(
                 "Tuna feature is enabled (`features.tuna = true`), \
                 but the `[tuna]` configuration block is missing. \
@@ -45,11 +35,11 @@ fn update_commands_by_features(
     }
 
     if params.features.uv {
-        features.extend(["uv".to_string(), "run".to_string()]);
+        features.extend(uv_args());
     }
 
     if features.is_empty() {
-        return Ok(django_commands);
+        return Ok(DjangoCommands::new());
     }
 
     features.extend(django_commands.iter().cloned());
@@ -62,12 +52,15 @@ pub(super) fn run_server(params: &Params) -> AnyhowResult<ExitCode> {
     let mut django_commands = params.django.runserver();
 
     if django_commands.is_default() {
+        // manage.py
         django_commands.push(MANAGE_PY.to_string());
+        // runserver <args>
         django_commands.extend(params.django.runserver_args().into_iter());
+        // --port XXXX
         django_commands.push(params.django.port.to_string());
     };
 
-    django_commands = update_commands_by_features(django_commands, &params)?;
+    django_commands = update_commands_by_features(&django_commands, &params)?;
 
     let exit_code = command_execute(Command::try_from(django_commands)?);
     Ok(exit_code)
@@ -84,7 +77,7 @@ pub(super) fn manage(params: &Params, django_args: &DjangoCommands) -> AnyhowRes
     django_commands.push(MANAGE_PY.to_string());
     django_commands.extend(django_args.iter().cloned());
 
-    django_commands = update_commands_by_features(django_commands, &params)?;
+    django_commands = update_commands_by_features(&django_commands, &params)?;
 
     let exit_code = command_execute(Command::try_from(django_commands)?);
     Ok(exit_code)

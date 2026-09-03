@@ -30,6 +30,7 @@ mod cli;
 mod constance;
 mod executor;
 mod parse_toml;
+mod commands;
 
 use anyhow::Result as AnyhowResult;
 use cli::{Command as ArgsCommand, DjUp, parse_args};
