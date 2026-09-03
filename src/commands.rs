@@ -15,7 +15,7 @@ pub(super) fn tuna_args(tuna_params: &TunaParams) -> Vec<String> {
         "--config",
         &tuna_params.config,
         "--api-key",
-        &tuna_params.api_key(),
+        tuna_params.api_key(),
         "--",
     ]
     .into_iter()

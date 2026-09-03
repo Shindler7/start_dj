@@ -9,10 +9,11 @@ use serde::Deserialize;
 use std::{fmt::Debug, path::PathBuf};
 
 /// Specifies where environment variables should be loaded from.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub(super) enum EnvSource {
     /// Load from a `.env` file only.
+    #[default]
     #[serde(alias = "Dotenv", alias = "DOTENV")]
     Dotenv,
 
@@ -23,12 +24,6 @@ pub(super) enum EnvSource {
     /// Load from both — `.env` file and system environment.
     #[serde(alias = "Mixed", alias = "MIXED")]
     Mixed,
-}
-
-impl Default for EnvSource {
-    fn default() -> Self {
-        Self::Dotenv
-    }
 }
 
 /// Specify the runtime environment (optional).
@@ -129,7 +124,8 @@ impl Django {
 
         flags
             .iter()
-            .filter_map(|(condition, flag)| condition.then(|| flag.to_string()))
+            .filter(|&(condition, _)| *condition)
+            .map(|(_, flag)| flag.to_string())
             .collect()
     }
 
@@ -170,7 +166,7 @@ impl TunaParams {
 }
 
 /// Feature flags for enabling/disabling optional capabilities.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(default)]
 pub(crate) struct Features {
     /// Enable Tuna cloud secrets integration.
@@ -178,13 +174,4 @@ pub(crate) struct Features {
 
     /// Enable `uv` package manager support.
     pub(crate) uv: bool,
-}
-
-impl Default for Features {
-    fn default() -> Self {
-        Self {
-            tuna: false,
-            uv: false,
-        }
-    }
 }

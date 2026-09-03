@@ -18,7 +18,7 @@ pub(crate) fn toml_path() -> Result<PathBuf> {
 
 /// Returns the current working directory.
 fn current_dir() -> Result<PathBuf> {
-    Ok(env::current_dir().context("Could not get current directory")?)
+    env::current_dir().context("Could not get current directory")
 }
 
 /// The default Django management script name.

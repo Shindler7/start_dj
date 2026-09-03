@@ -55,7 +55,7 @@ pub(super) fn run_server(params: &Params) -> AnyhowResult<ExitCode> {
         // manage.py
         django_commands.push(MANAGE_PY.to_string());
         // runserver <args>
-        django_commands.extend(params.django.runserver_args().into_iter());
+        django_commands.extend(params.django.runserver_args());
         // --port XXXX
         django_commands.push(params.django.port.to_string());
     };

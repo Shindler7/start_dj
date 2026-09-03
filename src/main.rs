@@ -27,10 +27,10 @@
 //! the tool falls back to sensible defaults. The example above
 //! shows the default values for every field.
 mod cli;
+mod commands;
 mod constance;
 mod executor;
 mod parse_toml;
-mod commands;
 
 use anyhow::Result as AnyhowResult;
 use cli::{Command as ArgsCommand, DjUp, parse_args};
@@ -43,13 +43,11 @@ fn main() -> AnyhowResult<ExitCode> {
     let dj_up: DjUp = parse_args();
     let params = read_params()?;
 
-    let result = match dj_up.command {
+    match dj_up.command {
         Some(ArgsCommand::Manage(m)) => {
             let django_commands: DjangoCommands = m.django_args.into();
             executor::manage(&params, &django_commands)
         }
         _ => executor::run_server(&params),
-    };
-
-    Ok(result?)
+    }
 }
