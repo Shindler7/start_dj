@@ -23,8 +23,8 @@ Make sure you have `Rust` 1.93 or later installed on your system.
 ### 1. Clone the repository
 
 ```shell
-git clone git@github.com:Shindler7/start_dj.git
-cd start_dj/
+git clone git@github.com:Shindler7/dj.git
+cd dj/
 ```
 
 ### 2. Build from source
