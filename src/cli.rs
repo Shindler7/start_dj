@@ -13,6 +13,7 @@ pub(crate) struct DjUp {
 
 /// Internal CLI structure used for parsing command-line arguments.
 #[derive(Debug, Parser)]
+#[clap(version, about, long_about = None)]
 struct Cli {
     /// subcommand to execute (defaults to `runserver`)
     #[command(subcommand)]
