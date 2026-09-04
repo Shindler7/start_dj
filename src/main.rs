@@ -35,7 +35,7 @@ mod parse_toml;
 use anyhow::Result as AnyhowResult;
 use cli::{Command as ArgsCommand, parse_args};
 use env_logger::WriteStyle;
-use log::error;
+use log::{LevelFilter, error};
 use parse_toml::read_params;
 use std::{io::Write, process::ExitCode};
 
@@ -44,10 +44,15 @@ use std::{io::Write, process::ExitCode};
 /// Initializes logging, runs the main application logic, and returns
 /// an appropriate exit code.
 fn main() -> ExitCode {
+    let app_name = env!("CARGO_PKG_NAME");
+
     env_logger::builder()
         .format_timestamp(None)
-        .format(|buf, record| writeln!(buf, "[{}]: {}", record.level(), record.args()))
+        .format(move |buf, record| {
+            writeln!(buf, "[{} — {}]: {}", app_name, record.level(), record.args())
+        })
         .write_style(WriteStyle::Auto)
+        .filter_level(LevelFilter::Info)
         .init();
 
     dj_start().unwrap_or_else(|err| {

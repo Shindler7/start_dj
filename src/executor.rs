@@ -60,7 +60,7 @@ pub(super) fn run_server(params: &Params) -> AnyhowResult<ExitCode> {
         django_commands.push(params.django.port.to_string());
     } else {
         log::warn!(
-            "Warning: custom command detected — [django] section settings (port, flags, etc.) are ignored."
+            "custom command detected — [django] section settings (port, flags, etc.) are ignored."
         );
     };
 
