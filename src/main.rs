@@ -28,26 +28,52 @@
 //! shows the default values for every field.
 mod cli;
 mod commands;
-mod constance;
+mod constants;
 mod executor;
 mod parse_toml;
 
 use anyhow::Result as AnyhowResult;
-use cli::{Command as ArgsCommand, DjUp, parse_args};
-use parse_toml::{DjangoCommands, read_params};
-use std::process::ExitCode;
+use cli::{Command as ArgsCommand, parse_args};
+use env_logger::WriteStyle;
+use log::error;
+use parse_toml::read_params;
+use std::{io::Write, process::ExitCode};
 
-/// Program entry point — parses CLI args, loads config, and dispatches
-/// to the appropriate handler.
-fn main() -> AnyhowResult<ExitCode> {
-    let dj_up: DjUp = parse_args();
+/// Application entry point.
+///
+/// Initializes logging, runs the main application logic, and returns
+/// an appropriate exit code.
+fn main() -> ExitCode {
+    env_logger::builder()
+        .format_timestamp(None)
+        .format(|buf, record| writeln!(buf, "[{}]: {}", record.level(), record.args()))
+        .write_style(WriteStyle::Auto)
+        .init();
+
+    dj_start().unwrap_or_else(|err| {
+        error!("{}", err);
+        ExitCode::FAILURE
+    })
+}
+
+/// Core application logic.
+///
+/// Loads configuration, parses command-line arguments, and executes
+/// the requested command (`runserver` or `manage`).
+fn dj_start() -> AnyhowResult<ExitCode> {
     let params = read_params()?;
+    let command = parse_args().command;
 
-    match dj_up.command {
-        Some(ArgsCommand::Manage(m)) => {
-            let django_commands: DjangoCommands = m.django_args.into();
+    log::debug!(
+        "TOML file loaded successfully, now executing command `{:?}`",
+        command
+    );
+
+    match command {
+        ArgsCommand::Manage { django_args } => {
+            let django_commands = django_args.into();
             executor::manage(&params, &django_commands)
         }
-        _ => executor::run_server(&params),
+        ArgsCommand::Runserver => executor::run_server(&params),
     }
 }

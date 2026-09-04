@@ -5,7 +5,7 @@
 
 use crate::{
     commands::{tuna_args, uv_args},
-    constance::{MANAGE_PY, PYTHON_BIN},
+    constants::{MANAGE_PY, PYTHON_BIN},
     parse_toml::{DjangoCommands, Params},
 };
 use anyhow::{Result as AnyhowResult, bail};
@@ -58,6 +58,10 @@ pub(super) fn run_server(params: &Params) -> AnyhowResult<ExitCode> {
         django_commands.extend(params.django.runserver_args());
         // --port XXXX
         django_commands.push(params.django.port.to_string());
+    } else {
+        log::warn!(
+            "Warning: custom command detected — [django] section settings (port, flags, etc.) are ignored."
+        );
     };
 
     django_commands = update_commands_by_features(django_commands, params)?;

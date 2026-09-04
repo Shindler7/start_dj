@@ -1,13 +1,23 @@
 //! Parser for configuration parameters from `start.toml`.
 
 use crate::{
-    constance,
+    constants,
     parse_toml::models::{BootstrapConfig, EnvSource, Params},
 };
 use anyhow::{Context, Result as AnyhowResult, bail};
 use regex::Regex;
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, fs::read_to_string, path::Path, sync::LazyLock};
 use toml::Value;
+
+/// Regex for detecting and extracting `${VAR}`-style placeholders.
+///
+/// Matches patterns like `${API_KEY}`, `${DATABASE_URL}`, etc.
+/// The capturing group extracts the variable name for lookup.
+static RE_TOML: LazyLock<Regex> = {
+    LazyLock::new(|| {
+        Regex::new(r"\$\{([A-Za-z_][A-Za-z0-9_]*)}").expect("Invalid placeholder regex")
+    })
+};
 
 /// Loads environment variables from a `.env` file into a hash map.
 ///
@@ -64,29 +74,27 @@ fn collect_vars(source: &EnvSource, env_path: &Path) -> AnyhowResult<HashMap<Str
 /// ## Errors
 /// Fails if a referenced variable is not found in the map.
 fn expand_placeholders(input: &str, vars: &HashMap<String, String>) -> AnyhowResult<String> {
-    let re = Regex::new(r"\$\{([A-Za-z_][A-Za-z0-9_]*)}").context("Invalid placeholder regex")?;
+    let re = &*RE_TOML;
 
-    let mut out = String::with_capacity(input.len());
-    let mut last = 0;
+    let mut missing_key = None;
 
-    for caps in re.captures_iter(input) {
-        let m = caps.get(0).unwrap();
-        let key = caps.get(1).unwrap().as_str();
+    let result = re.replace_all(input, |caps: &regex::Captures| {
+        let key = &caps[1];
 
-        // Everything between the last match and this one goes in verbatim.
-        out.push_str(&input[last..m.start()]);
-
-        // Look up the variable and substitute, or fail hard.
-        if let Some(value) = vars.get(key) {
-            out.push_str(value);
-        } else {
-            bail!("Variable `{}` is referenced in TOML but not found", key);
+        match vars.get(key) {
+            Some(val) => val.clone(),
+            None => {
+                missing_key = Some(key.to_string());
+                String::new()
+            }
         }
-        last = m.end();
+    });
+
+    if let Some(key) = missing_key {
+        bail!("Variable `{}` is referenced in TOML but not found", key);
     }
 
-    out.push_str(&input[last..]);
-    Ok(out)
+    Ok(result.into_owned())
 }
 
 fn has_placeholders(value: &Value) -> bool {
@@ -127,14 +135,14 @@ fn interpolate_value(v: &mut Value, vars: &HashMap<String, String>) -> AnyhowRes
 /// Exits the process with an error message if the TOML file doesn't exist,
 /// cannot be read, or fails to parse.
 pub(crate) fn read_params() -> AnyhowResult<Params> {
-    let toml_path = constance::toml_path()?;
+    let toml_path = constants::toml_path()?;
 
     // Check that the config file actually exists.
     if !toml_path.is_file() {
-        bail!("The TOML file `{}` does not exist", toml_path.display());
+        bail!("The TOML file `{}` does not exist.", toml_path.display());
     }
 
-    let toml_string = std::fs::read_to_string(toml_path).context("Failed to read TOML file")?;
+    let toml_string = read_to_string(toml_path).context("Failed to read TOML file")?;
 
     let bootstrap: BootstrapConfig = toml::from_str(&toml_string)
         .context("Failed to parse TOML (bootstrap pass for [environment])")?;
