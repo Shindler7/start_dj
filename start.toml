@@ -40,7 +40,7 @@ skip-checks = false   # Skip Django's system checks
 [tuna]
 # Tuna project and environment names
 project = "funny"
-config = "dev"
+config = "${TUNA_CONFIG}"
 
 # API key — supports `${VAR}` expansion from your .env file
 # Never hardcode secrets! Use environment variables.
