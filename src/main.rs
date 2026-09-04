@@ -44,12 +44,18 @@ use std::{io::Write, process::ExitCode};
 /// Initializes logging, runs the main application logic, and returns
 /// an appropriate exit code.
 fn main() -> ExitCode {
-    let app_name = env!("CARGO_PKG_NAME");
+    let app_name = env!("CARGO_PKG_NAME").to_uppercase();
 
     env_logger::builder()
         .format_timestamp(None)
         .format(move |buf, record| {
-            writeln!(buf, "[{} — {}]: {}", app_name, record.level(), record.args())
+            writeln!(
+                buf,
+                "[{} | {}]: {}",
+                app_name,
+                record.level(),
+                record.args()
+            )
         })
         .write_style(WriteStyle::Auto)
         .filter_level(LevelFilter::Info)
