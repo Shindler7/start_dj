@@ -81,10 +81,10 @@ fn dj_start() -> AnyhowResult<ExitCode> {
     );
 
     match command {
-        ArgsCommand::Manage { django_args } => {
+        ArgsCommand::Runserver => executor::run_server(&params),
+        ArgsCommand::Manage(django_args) => {
             let django_commands = django_args.into();
             executor::manage(&params, &django_commands)
         }
-        ArgsCommand::Runserver => executor::run_server(&params),
     }
 }
